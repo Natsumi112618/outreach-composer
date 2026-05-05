@@ -150,6 +150,40 @@
   .copy-btn:hover { background: #2450cc; }
   .copy-btn:active { transform: scale(0.97); }
   .copy-btn.copied { background: var(--success); }
+  .subject-row {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    background: var(--accent-light);
+    border: 1px solid #c7d3f7;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .subject-row.visible { display: flex; }
+  .subject-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .subject-text { font-size: 13px; color: var(--text); flex: 1; }
+  .subject-copy {
+    height: 28px; padding: 0 10px;
+    background: var(--accent); color: white;
+    border: none; border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .subject-copy:hover { background: #2450cc; }
+  .subject-copy.copied { background: var(--success); }
 </style>
 </head>
 <body>
@@ -184,6 +218,11 @@
     <button class="tab" onclick="setChannel('sns',this)">その他SNS</button>
   </div>
 
+  <div class="subject-row" id="subjectrow">
+    <span class="subject-label">件名</span>
+    <span class="subject-text" id="subjecttext"></span>
+    <button class="subject-copy" id="subjectcopy" onclick="copySubject()">コピー</button>
+  </div>
   <div class="preview" id="preview"></div>
   <div class="meta-row">
     <span class="char-badge" id="charbadge"></span>
@@ -195,6 +234,17 @@
 </div>
 
 <script>
+const subjects = {
+  india: {
+    inmail: "Paid Interview Request 【Emergency Lighting Market in India】",
+    email:  "Research Interview Invitation – Resory Japan"
+  },
+  thailand: {
+    inmail: "Paid Interview Request 【Modern Trade & Retail Distribution Market in Thailand】",
+    email:  "Research Interview Invitation – Resory Japan"
+  }
+};
+
 const messages = {
   india: {
     linkedin1: `Dear {name},\nI'm with Resory, a market research firm in Japan. We're studying trends in India's fire safety and emergency evacuation systems market and value your extensive expertise in this field.\nWould you be open to a paid in-person interview? (150 USD)\nLooking forward to hearing from you!`,
@@ -238,6 +288,7 @@ function getMsg() {
 
 function update() {
   const msg = getMsg();
+  const proj = document.getElementById('project').value;
   document.getElementById('preview').textContent = msg;
   const len = msg.length;
   const badge = document.getElementById('charbadge');
@@ -251,6 +302,32 @@ function update() {
   const btn = document.getElementById('copybtn');
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>コピー`;
   btn.className = 'copy-btn';
+  // Subject row
+  const subRow = document.getElementById('subjectrow');
+  const subText = document.getElementById('subjecttext');
+  const subCopy = document.getElementById('subjectcopy');
+  if ((currentChannel === 'inmail' || currentChannel === 'email') && subjects[proj] && subjects[proj][currentChannel]) {
+    subText.textContent = subjects[proj][currentChannel];
+    subRow.className = 'subject-row visible';
+    subCopy.textContent = 'コピー';
+    subCopy.className = 'subject-copy';
+  } else {
+    subRow.className = 'subject-row';
+  }
+}
+
+function copySubject() {
+  const proj = document.getElementById('project').value;
+  const subject = subjects[proj][currentChannel];
+  navigator.clipboard.writeText(subject).then(() => {
+    const btn = document.getElementById('subjectcopy');
+    btn.textContent = 'コピーしました';
+    btn.className = 'subject-copy copied';
+    setTimeout(() => {
+      btn.textContent = 'コピー';
+      btn.className = 'subject-copy';
+    }, 2000);
+  });
 }
 
 function copyMsg() {
