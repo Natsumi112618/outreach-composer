@@ -117,6 +117,29 @@
   .tab:hover { border-color: var(--accent); color: var(--accent); }
   .tab.active { background: var(--accent); border-color: var(--accent); color: white; }
 
+  /* account selector */
+  .account-row {
+    margin-bottom: 16px;
+  }
+  .account-buttons {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .account-btn {
+    height: 34px; padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .account-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .account-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
   /* expert feature row */
   .feature-row {
     margin-bottom: 14px;
@@ -142,7 +165,6 @@
     max-height: 420px;
     overflow-y: auto;
   }
-  /* highlight placeholder in preview */
   .preview .placeholder {
     background: var(--warn-light);
     color: var(--warn);
@@ -196,12 +218,22 @@
         <option disabled>──────────────</option>
         <option value="close">クローズ</option>
         <option value="followup">フォローアップ</option>
+        <option value="policy_decline">ポリシーお断り</option>
       </select>
     </div>
     <div class="field">
       <label>相手の名前</label>
       <input type="text" id="name" placeholder="例: Phattanan Bhavamaya" oninput="update()" autocomplete="off" />
       <span id="nameBadge" style="display:none; margin-top:5px; font-family:'DM Mono',monospace; font-size:11px; padding:3px 8px; border-radius:5px; background:var(--accent-light); color:var(--accent);"></span>
+    </div>
+  </div>
+
+  <!-- アカウント選択 -->
+  <div class="account-row">
+    <div class="section-label">送信アカウント</div>
+    <div class="account-buttons">
+      <button class="account-btn active" data-account="Sawa Nagai" onclick="setAccount('Sawa Nagai', this)">Sawa Nagai</button>
+      <button class="account-btn" data-account="Clara" onclick="setAccount('Clara', this)">Clara</button>
     </div>
   </div>
 
@@ -236,53 +268,76 @@
 const FEATURE_PLACEHOLDER = '(エキスパートの特徴を上のフィールドに入力してください)';
 const URL_PLACEHOLDER = '(GoogleフォームのURLを上のフィールドに入力してください)';
 
+// アカウント情報
+const accounts = {
+  'Sawa Nagai': {
+    name: 'Sawa Nagai',
+    mail: 'nagai@resory.jp',
+    hp: 'https://resory.jp/resory_en'
+  },
+  'Clara': {
+    name: 'Clara',
+    mail: 'nagai@resory.jp',
+    hp: 'https://resory.jp/resory_en'
+  }
+};
+let currentAccount = 'Sawa Nagai';
+
+function setAccount(acct, el) {
+  currentAccount = acct;
+  document.querySelectorAll('.account-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  update();
+}
+
+// {sender} = 署名の名前, {sender_mail} = メール, {sender_hp} = HP
 const messages = {
   india: {
     linkedin1: `Dear {name},\nI'm with Resory, a market research firm in Japan. We're studying trends in India's fire safety and emergency evacuation systems market and value your extensive expertise in this field.\nWould you be open to a paid in-person interview? (150 USD)\nLooking forward to hearing from you!`,
 
-    linkedin2: `Hello {name},\nThank you for connecting!\nI would appreciate it if you could take a look at the details below and consider participating.\n\n◆ Interview Details\nTopic: Trends in Emergency Lighting Market in India\nFormat: In-person interview at your convenient location in Mumbai or Hyderabad (May 7th – 12th)\nDuration: 60-90 minutes\nCompensation: 150 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (approx. 5 min)\nhttps://docs.google.com/forms/d/e/1FAIpQLSdoIGRhxYVcmnLDLQEZp-0gxes1-gibktlR-o1bnGYRII4QCA/viewform?usp=publish-editor\n2. Upon reviewing your response, we will follow up with you to arrange the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, please feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,`,
+    linkedin2: `Hello {name},\nThank you for connecting!\nI would appreciate it if you could take a look at the details below and consider participating.\n\n◆ Interview Details\n・Topic: Trends in Emergency Lighting Market in India\n・Format: In-person interview at your convenient location in Mumbai or Hyderabad (May 7th – 12th)\n・Duration: 60-90 minutes\n・Compensation: 150 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (approx. 5 min)\nhttps://docs.google.com/forms/d/e/1FAIpQLSdoIGRhxYVcmnLDLQEZp-0gxes1-gibktlR-o1bnGYRII4QCA/viewform?usp=publish-editor\n2. Upon reviewing your response, we will follow up with you to arrange the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\n{sender}`,
 
-    inmail: `Dear {name},\nI'm with Resory, a market research firm in Japan.\nI hope this message finds you well.\nI previously sent you a connection request and wanted to follow up here in case it was missed.\n\nWe are currently studying trends in the Emergency Lighting Market in India, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Trends in Emergency Lighting Market in India\n・Format: In-person interview at your convenient location in Mumbai or Hyderabad (May 7th – 12th)\n・Duration: 60-90 minutes\n・Compensation: 150 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (approx. 5 min):\n{form_url}\n2. Upon reviewing your response, we will follow up with you to schedule the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions or concerns, please feel free to contact us.\nI look forward to hearing from you!\n\nBest regards,\nSawa Nagai`,
+    inmail: `Dear {name},\nI'm with Resory, a market research firm in Japan.\nI hope this message finds you well.\nI previously sent you a connection request and wanted to follow up here in case it was missed.\n\nWe are currently studying trends in the Emergency Lighting Market in India, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Trends in Emergency Lighting Market in India\n・Format: In-person interview at your convenient location in Mumbai or Hyderabad (May 7th – 12th)\n・Duration: 60-90 minutes\n・Compensation: 150 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (approx. 5 min):\n{form_url}\n2. Upon reviewing your response, we will follow up with you to schedule the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\n{sender}`,
 
-    email: `Dear {name},\nI apologize if this unexpected message causes any concern.\n\nMy name is Sawa Nagai, and I work at Resory Inc., based in Osaka, Japan.\n\nWe are currently studying trends in the Emergency Lighting Market in India, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Trends in Emergency Lighting Market in India\n・Format: In-person interview at your convenient location in Mumbai or Hyderabad (May 7th – 12th)\n・Duration: 60-90 minutes\n・Compensation: 150 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (approx. 5 min):\n{form_url}\n2. Upon reviewing your response, we will follow up with you to schedule the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions or concerns, please feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\nSawa Nagai\nMail: nagai@resory.jp\nHP: https://resory.jp/resory_en`,
+    email: `Dear {name},\nI apologize if this unexpected message causes any concern.\n\nMy name is {sender}, and I work at Resory Inc., based in Osaka, Japan.\n\nWe are currently studying trends in the Emergency Lighting Market in India, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Trends in Emergency Lighting Market in India\n・Format: In-person interview at your convenient location in Mumbai or Hyderabad (May 7th – 12th)\n・Duration: 60-90 minutes\n・Compensation: 150 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (approx. 5 min):\n{form_url}\n2. Upon reviewing your response, we will follow up with you to schedule the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\n{sender}\nMail: {sender_mail}\nHP: {sender_hp}`,
 
-    sns: `Hi {name}!\nHello from Osaka, Japan! I'm reaching out for a paid interview opportunity (150 USD / 60-90 min).\n\nWe're researching trends in the Emergency Lighting Market in India, and your expertise caught our attention!\n\nWould you be open to a quick chat?\n\nBest regards,\nSawa Nagai (Resory Inc.)`
+    sns: `Hi {name}!\nHello from Osaka, Japan! I'm reaching out for a paid interview opportunity (150 USD / 60-90 min).\n\nWe're researching trends in the Emergency Lighting Market in India, and your expertise caught our attention!\n\nWould you be open to a quick chat?\n\nIf you have any questions, feel free to contact me.\n\nBest regards,\n{sender} (Resory Inc.)`
   },
 
   thailand1: {
-    linkedin1: `Hi {name},\nI'm with Resory, a Japan-based market research firm. We're currently researching how sales data is handled between distributors and retailers in Thailand.\nWould you be open to a paid interview? ($100 USD/hr.)\nLooking forward to hearing from you!`,
+    linkedin1: `Hi {name},\nI'm with Resory, a market research firm in Japan. We're currently researching how sales data is handled between distributors and retailers in Thailand.\nWould you be open to a paid interview? ($100 USD/hr.)\nLooking forward to hearing from you!`,
 
-    linkedin2: `Hi {name},\nThank you for connecting!\nCould you please see the details below and consider participating?\n\n◆ Interview Details\nTopic: Sales data management & Digitalization trends in Thailand.\nFormat: Online (60 min).\nCompensation: 100 USD (via bank transfer within 3 business days).\nSafety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\nhttps://docs.google.com/forms/d/e/1FAIpQLSfkgrVFOc8q50SGb4E7B7Zco5pXxgpBQbQxCWRjXyPqdq_UQg/viewform?usp=header\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nI look forward to the possibility of collaborating with you!\nBest regards,`,
+    linkedin2: `Hi {name},\nThank you for connecting!\nCould you please see the details below and consider participating?\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand.\n・Format: Online (60 min).\n・Compensation: 100 USD (via bank transfer within 3 business days).\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\nhttps://docs.google.com/forms/d/e/1FAIpQLSfkgrVFOc8q50SGb4E7B7Zco5pXxgpBQbQxCWRjXyPqdq_UQg/viewform?usp=header\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to the possibility of collaborating with you!\nBest regards,\n{sender}`,
 
-    inmail: `Dear {name},\nI'm with Resory, a market research firm in Japan.\nI hope this message finds you well.\nI previously sent you a connection request and wanted to follow up here in case it was missed.\n\nWe are currently researching sales data management and digitalization trends in Thailand's distribution and retail sector, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand\n・Format: Online (Zoom), 60 minutes\n・Compensation: 100 USD (via bank transfer within 3 business days)\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\n{form_url}\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions or concerns, please feel free to contact us.\nI look forward to hearing from you!\n\nBest regards,\nSawa Nagai`,
+    inmail: `Dear {name},\nI'm with Resory, a market research firm in Japan.\nI hope this message finds you well.\nI previously sent you a connection request and wanted to follow up here in case it was missed.\n\nWe are currently researching sales data management and digitalization trends in Thailand's distribution and retail sector, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand\n・Format: Online (Zoom), 60 minutes\n・Compensation: 100 USD (via bank transfer within 3 business days)\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\n{form_url}\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\n{sender}`,
 
-    email: `Dear {name},\nI apologize if this unexpected message causes any concern.\n\nMy name is Sawa Nagai, and I work at Resory Inc., based in Osaka, Japan.\n\nWe are currently researching sales data management and digitalization trends in Thailand's distribution and retail sector, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand\n・Format: Online (Zoom), 60 minutes\n・Compensation: 100 USD (via bank transfer within 3 business days)\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\n{form_url}\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions or concerns, please feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\nSawa Nagai\nMail: oku@resory.jp\nHP: https://resory.jp/resory_en`,
+    email: `Dear {name},\nI apologize if this unexpected message causes any concern.\n\nMy name is {sender}, and I work at Resory Inc., based in Osaka, Japan.\n\nWe are currently researching sales data management and digitalization trends in Thailand's distribution and retail sector, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand\n・Format: Online (Zoom), 60 minutes\n・Compensation: 100 USD (via bank transfer within 3 business days)\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\n{form_url}\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\n{sender}\nMail: {sender_mail}\nHP: {sender_hp}`,
 
-    sns: `Hi {name}!\nHello from Osaka, Japan! I'm reaching out for a paid interview opportunity (100 USD / 60 min).\n\nWe're researching sales data management & digitalization trends in Thailand, and your expertise caught our attention!\n\nWould you be open to a quick chat?\n\nBest regards,\nSawa Nagai (Resory Inc.)`
+    sns: `Hi {name}!\nHello from Osaka, Japan! I'm reaching out for a paid interview opportunity (100 USD / 60 min).\n\nWe're researching sales data management & digitalization trends in Thailand, and your expertise caught our attention!\n\nWould you be open to a quick chat?\n\nIf you have any questions, feel free to contact me.\n\nBest regards,\n{sender} (Resory Inc.)`
   },
 
   thailand2: {
     linkedin1: `Hi {name},\nI'm with Resory, a market research firm in Japan. We're studying how sales data flows between manufacturers, distributors, and retailers in Thailand.\nWould you be open to a paid online interview? ($100 USD/hr.)\nLooking forward to hearing from you!`,
 
-    linkedin2: `Hi {name},\nThank you for connecting!\nCould you please see the details below and consider participating?\n\n◆ Interview Details\nTopic: Sales data management & Digitalization trends in Thailand.\nFormat: Online (60 min).\nCompensation: 100 USD (via bank transfer within 3 business days).\nSafety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\nhttps://docs.google.com/forms/d/e/1FAIpQLSeWhd1jubJkP84DIEy0zxqIWKhrucHqmPdw_mPv8ewRsx_fnQ/viewform?usp=header\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nI look forward to the possibility of collaborating with you!\nBest regards,`,
+    linkedin2: `Hi {name},\nThank you for connecting!\nCould you please see the details below and consider participating?\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand.\n・Format: Online (60 min).\n・Compensation: 100 USD (via bank transfer within 3 business days).\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\nhttps://docs.google.com/forms/d/e/1FAIpQLSeWhd1jubJkP84DIEy0zxqIWKhrucHqmPdw_mPv8ewRsx_fnQ/viewform?usp=header\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to the possibility of collaborating with you!\nBest regards,\n{sender}`,
 
-    inmail: `Dear {name},\nI'm with Resory, a market research firm in Japan.\nI hope this message finds you well.\nI previously sent you a connection request and wanted to follow up here in case it was missed.\n\nWe are currently researching sales data management and digitalization trends in Thailand's distribution and retail sector, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand\n・Format: Online (Zoom), 60 minutes\n・Compensation: 100 USD (via bank transfer within 3 business days)\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\n{form_url}\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions or concerns, please feel free to contact us.\nI look forward to hearing from you!\n\nBest regards,\nSawa Nagai`,
+    inmail: `Dear {name},\nI'm with Resory, a market research firm in Japan.\nI hope this message finds you well.\nI previously sent you a connection request and wanted to follow up here in case it was missed.\n\nWe are currently researching sales data management and digitalization trends in Thailand's distribution and retail sector, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand\n・Format: Online (Zoom), 60 minutes\n・Compensation: 100 USD (via bank transfer within 3 business days)\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\n{form_url}\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\n{sender}`,
 
-    email: `Dear {name},\nI apologize if this unexpected message causes any concern.\n\nMy name is Sawa Nagai, and I work at Resory Inc., based in Osaka, Japan.\n\nWe are currently researching sales data management and digitalization trends in Thailand's distribution and retail sector, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand\n・Format: Online (Zoom), 60 minutes\n・Compensation: 100 USD (via bank transfer within 3 business days)\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\n{form_url}\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions or concerns, please feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\nSawa Nagai\nMail: oku@resory.jp\nHP: https://resory.jp/resory_en`,
+    email: `Dear {name},\nI apologize if this unexpected message causes any concern.\n\nMy name is {sender}, and I work at Resory Inc., based in Osaka, Japan.\n\nWe are currently researching sales data management and digitalization trends in Thailand's distribution and retail sector, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Sales data management & Digitalization trends in Thailand\n・Format: Online (Zoom), 60 minutes\n・Compensation: 100 USD (via bank transfer within 3 business days)\n・Safety: We focus on general industry practices; no confidential info is requested.\n\n◆ Future Opportunity (Bangkok Visit)\nWe are visiting Bangkok from late May to early June. Following our initial online session, we would love to meet you in person for a deeper, second discussion. This in-person interview will also be a paid session.\n\n▼ How to Participate\n1. Please fill out this brief screening form (approx. 5 min):\n{form_url}\n2. We will follow up to schedule the first online session.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\n{sender}\nMail: {sender_mail}\nHP: {sender_hp}`,
 
-    sns: `Hi {name}!\nHello from Osaka, Japan! I'm reaching out for a paid interview opportunity (100 USD / 60 min).\n\nWe're researching sales data management & digitalization trends in Thailand, and your expertise caught our attention!\n\nWould you be open to a quick chat?\n\nBest regards,\nSawa Nagai (Resory Inc.)`
+    sns: `Hi {name}!\nHello from Osaka, Japan! I'm reaching out for a paid interview opportunity (100 USD / 60 min).\n\nWe're researching sales data management & digitalization trends in Thailand, and your expertise caught our attention!\n\nWould you be open to a quick chat?\n\nIf you have any questions, feel free to contact me.\n\nBest regards,\n{sender} (Resory Inc.)`
   },
 
   rocket: {
     linkedin1: `Hello {name},\nI'm with Resory, a Japanese research firm.\nWe are studying QA and supplier management trends in the Space Launch Industry and would like to offer $200 for a 60-minute interview on your expertise.\nWould you be open to a paid consultation?`,
 
-    linkedin2: `Hello {name},\nThank you for connecting!\nCould you kindly take a look at the details below and consider participating in our interview?\n\n◆ Interview Details\nTopic: Quality Assurance Processes and Responsibility Management in Space Launch Industry\nFormat: Online (Zoom)\nDuration: 60 minutes\nCompensation: 200 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (2-3 min):\nhttps://docs.google.com/forms/d/e/1FAIpQLSfbn1utSUfeBlL82YCixtTynD8Ib1NKzqL37o-ydBmAtRHGYg/viewform?usp=header\n2. We'll get in touch to arrange a convenient time.\n3. Join the interview and receive your compensation.\n\nI'm looking forward to hearing from you.\nBest regards,`,
+    linkedin2: `Hello {name},\nThank you for connecting!\nCould you kindly take a look at the details below and consider participating in our interview?\n\n◆ Interview Details\n・Topic: Quality Assurance Processes and Responsibility Management in Space Launch Industry\n・Format: Online (Zoom)\n・Duration: 60 minutes\n・Compensation: 200 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (2-3 min):\nhttps://docs.google.com/forms/d/e/1FAIpQLSfbn1utSUfeBlL82YCixtTynD8Ib1NKzqL37o-ydBmAtRHGYg/viewform?usp=header\n2. We'll get in touch to arrange a convenient time.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI'm looking forward to hearing from you.\nBest regards,\n{sender}`,
 
-    inmail: `Dear {name},\nI'm with Resory, a market research firm in Japan.\nI hope this message finds you well.\nI previously sent you a connection request and wanted to follow up here in case it was missed.\n\nWe are currently studying Quality Assurance Processes and Responsibility Management in the Space Launch Industry, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Quality Assurance Processes and Responsibility Management in Space Launch Industry\n・Format: Online (Zoom)\n・Duration: 60 minutes\n・Compensation: 200 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (2-3 min):\n{form_url}\n2. Upon reviewing your response, we will follow up with you to schedule the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions or concerns, please feel free to contact us.\nI look forward to hearing from you!\n\nBest regards,\nSawa Nagai`,
+    inmail: `Dear {name},\nI'm with Resory, a market research firm in Japan.\nI hope this message finds you well.\nI previously sent you a connection request and wanted to follow up here in case it was missed.\n\nWe are currently studying Quality Assurance Processes and Responsibility Management in the Space Launch Industry, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Quality Assurance Processes and Responsibility Management in Space Launch Industry\n・Format: Online (Zoom)\n・Duration: 60 minutes\n・Compensation: 200 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (2-3 min):\n{form_url}\n2. Upon reviewing your response, we will follow up with you to schedule the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\n{sender}`,
 
-    email: `Dear {name},\nI apologize if this unexpected message causes any concern.\n\nMy name is Sawa Nagai, and I work at Resory Inc., based in Osaka, Japan.\n\nWe are currently studying Quality Assurance Processes and Responsibility Management in the Space Launch Industry, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Quality Assurance Processes and Responsibility Management in Space Launch Industry\n・Format: Online (Zoom)\n・Duration: 60 minutes\n・Compensation: 200 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (2-3 min):\n{form_url}\n2. Upon reviewing your response, we will follow up with you to schedule the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions or concerns, please feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\nSawa Nagai\nMail: nagai@resory.jp\nHP: https://resory.jp/resory_en`,
+    email: `Dear {name},\nI apologize if this unexpected message causes any concern.\n\nMy name is {sender}, and I work at Resory Inc., based in Osaka, Japan.\n\nWe are currently studying Quality Assurance Processes and Responsibility Management in the Space Launch Industry, and we believe your experience would provide invaluable insights for our research.\n\nEspecially, {expert_feature}\n\nI know you are busy, but we would greatly appreciate it if you could check the details below and consider participating in this interview.\n\n◆ Interview Details\n・Topic: Quality Assurance Processes and Responsibility Management in Space Launch Industry\n・Format: Online (Zoom)\n・Duration: 60 minutes\n・Compensation: 200 USD (via bank transfer within 3 business days)\n\n▼ How to Participate\n1. Please fill out this short screening form (2-3 min):\n{form_url}\n2. Upon reviewing your response, we will follow up with you to schedule the interview.\n3. Join the interview and receive your compensation.\n\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!\n\nBest regards,\n{sender}\nMail: {sender_mail}\nHP: {sender_hp}`,
 
-    sns: `Hi {name}!\nHello from Osaka, Japan! I'm reaching out for a paid interview opportunity (200 USD / 60 min).\n\nWe're researching Quality Assurance and Supplier Management trends in the Space Launch Industry, and your expertise caught our attention!\n\nWould you be open to a quick chat?\n\nBest regards,\nSawa Nagai (Resory Inc.)`
+    sns: `Hi {name}!\nHello from Osaka, Japan! I'm reaching out for a paid interview opportunity (200 USD / 60 min).\n\nWe're researching Quality Assurance and Supplier Management trends in the Space Launch Industry, and your expertise caught our attention!\n\nWould you be open to a quick chat?\n\nIf you have any questions, feel free to contact me.\n\nBest regards,\n{sender} (Resory Inc.)`
   },
 
   close: {
@@ -290,12 +345,16 @@ const messages = {
   },
 
   followup: {
-    _single: `Hello {name},\nI hope this message finds you well. I'm following up on the paid interview opportunity I reached out to you about recently.\nIf you have any questions or concerns, please feel free to contact me.\nI look forward to hearing from you!`
+    _single: `Hello {name},\nI hope this message finds you well. I'm following up on the paid interview opportunity I reached out to you about recently.\nIf you have any questions, feel free to contact me.\nI look forward to hearing from you!`
+  },
+
+  policy_decline: {
+    _single: `Hello {name},\nThank you very much for your reply and letting me know.\nWhile it is unfortunate that you are unable to participate this time, I completely understand your situation.\nI hope we have the opportunity to work together in the future.\nBest regards,\n{sender}`
   }
 };
 
 // チャネルが不要な案件
-const singleMessageProjects = new Set(['close', 'followup']);
+const singleMessageProjects = new Set(['close', 'followup', 'policy_decline']);
 
 let currentChannel = 'linkedin1';
 
@@ -303,15 +362,12 @@ function onProjectChange() {
   const proj = document.getElementById('project').value;
   const isSingle = singleMessageProjects.has(proj);
 
-  // チャネルタブの表示切り替え
   document.getElementById('channelLabel').classList.toggle('hidden', isSingle);
   document.getElementById('channelTabs').classList.toggle('hidden', isSingle);
 
-  // single案件のときはチャネルを_singleに固定
   if (isSingle) {
     currentChannel = '_single';
   } else {
-    // 通常案件に戻ったときは1通目をデフォルトに
     currentChannel = 'linkedin1';
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelector('.tab[data-ch="linkedin1"]').classList.add('active');
@@ -335,7 +391,6 @@ function toggleFeatureRow() {
   row.classList.toggle('visible', showFeature);
 }
 
-// 国別の呼び名ルール: タイ=ファーストネーム、インド/ロケット=ファーストネーム、ベトナム(将来)=ラストネーム
 const nameRules = {
   india:     { rule: 'first', label: 'インド → ファーストネーム' },
   thailand1: { rule: 'first', label: 'タイ → ファーストネーム' },
@@ -348,7 +403,7 @@ function extractCallName(fullName, proj) {
   if (parts.length === 0 || fullName.trim() === '') return '';
   const rule = (nameRules[proj] || { rule: 'first' }).rule;
   if (rule === 'last') return parts[parts.length - 1];
-  return parts[0]; // first
+  return parts[0];
 }
 
 function getMsg() {
@@ -359,21 +414,24 @@ function getMsg() {
   const feature = featureRaw || FEATURE_PLACEHOLDER;
   const urlRaw = document.getElementById('formUrl').value.trim();
   const formUrl = urlRaw || URL_PLACEHOLDER;
+  const acct = accounts[currentAccount];
   return messages[proj][currentChannel]
     .replace(/{name}/g, callName)
     .replace(/{expert_feature}/g, feature)
-    .replace(/{form_url}/g, formUrl);
+    .replace(/{form_url}/g, formUrl)
+    .replace(/{sender}/g, acct.name)
+    .replace(/{sender_mail}/g, acct.mail)
+    .replace(/{sender_hp}/g, acct.hp);
 }
 
 function update() {
   toggleFeatureRow();
   const msg = getMsg();
 
-  // 呼び名バッジを更新
   const proj = document.getElementById('project').value;
   const fullName = document.getElementById('name').value.trim();
   const nameBadgeEl = document.getElementById('nameBadge');
-  if (fullName) {
+  if (fullName && !singleMessageProjects.has(proj)) {
     const callName = extractCallName(fullName, proj);
     const ruleLabel = (nameRules[proj] || { label: '' }).label;
     nameBadgeEl.textContent = `呼び名: ${callName}　（${ruleLabel}）`;
@@ -382,7 +440,6 @@ function update() {
     nameBadgeEl.style.display = 'none';
   }
 
-  // Render preview with highlighted placeholders
   const previewEl = document.getElementById('preview');
   let html = escapeHtml(msg);
   html = html.replace(escapeHtml(FEATURE_PLACEHOLDER), `<span class="placeholder">${escapeHtml(FEATURE_PLACEHOLDER)}</span>`);
